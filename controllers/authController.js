@@ -2,6 +2,16 @@ const userModel = require("../models/userModel.js");
 const tokenModel = require("../models/token.js");
 const crypto = require("crypto")
 const verifications = require("../utils/sendEmail.js")
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+//To generate web  tokens
+const generateAccessToken = (user) => {
+  return jwt.sign({ userId: user._id },'shhhhh' , //process.env.JWT_SECRET
+    {
+    expiresIn: '7h', // Set an appropriate expiration time
+  });
+};
+
 const register = async (req, res) => {
   try {
     const { name, password, confirmpassword, email } = req.body;
@@ -30,6 +40,13 @@ const register = async (req, res) => {
       confirmpassword,
       password,
     }).save();
+
+    // Generate an access token
+    const accessToken = generateAccessToken(user);
+
+    // Set the access token as a cookie
+    res.cookie('access_token', accessToken, { httpOnly: true });
+
     const token = await new tokenModel({
         userid:user._id,
         token:crypto.randomBytes(32).toString("hex")
@@ -40,6 +57,7 @@ const register = async (req, res) => {
       success: true,
       message: "An email has been sent to your account please verify",
       user,
+      accessToken, // Include the generated access token in the response
     });
   } catch (error) {
     console.log(error);
@@ -91,6 +109,12 @@ const login = async (req, res) => {
         message: "Passwords don't match",
       });
     }
+    // Generate an access token
+    const accessToken = generateAccessToken(user);
+    
+    // Set the access token as a cookie
+    res.cookie('access_token', accessToken, { httpOnly: true });
+
     if(!user.verified){
         let token = await tokenModel.findOne({
             userid: user._id
@@ -116,6 +140,7 @@ const login = async (req, res) => {
         email: user.email,
         password: user.password,
       },
+      accessToken, // Include the generated access token in the response
     });
   } catch (error) {
     res.status(500).send({
