@@ -1,10 +1,11 @@
 const userModel = require("../models/userModel.js");
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+
 const generateAccessToken = (user) => {
   return jwt.sign({ userId: user._id },'shhhhh' , 
     {
-    expiresIn: '7d',
+    expiresIn: '7h',
   });
 };
 

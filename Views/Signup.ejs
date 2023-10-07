@@ -1,0 +1,31 @@
+<form>
+<label for ="email">Email</label>
+<input type= "text" name="email" required/>
+<div class="email error"></div>
+<label for ="password">Password</label>
+<input type= "text" name="password" required/>
+<div class="password error"></div>
+<label for ="password">Confirm Password</label>
+<input type= "text" name="Confirm_password" required/>
+<button>Sign up</button>
+</form>
+<script>
+    const form = document.querySelector('form');
+
+    form.addEventListener('submit',async(e)=>{
+        e.preventDefault();
+
+        const email = form.email.value;
+        const password = form.password.value;
+        const Confirm_password = form.Confirm_password.value;
+        try{
+             const res = await fetch('/signup',{
+                method:'POST',
+                body:JSON.stringify({email,password,Confirm_password})
+             });
+        }
+        catch(err){
+            console.log(err);
+        }
+    })
+</script>
