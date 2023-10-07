@@ -1,6 +1,10 @@
 const mongoose = require("mongoose"); 
 
 const productSchema = new mongoose.Schema ({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
+  },
   title: {
     type: String,
     required: true 
@@ -23,6 +27,10 @@ const productSchema = new mongoose.Schema ({
   skills: {
     type: String,
     required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
   photos: [
     {
