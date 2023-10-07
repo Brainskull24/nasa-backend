@@ -1,13 +1,6 @@
 const userModel = require("../models/userModel.js");
-const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
-
-const generateAccessToken = (user) => {
-  return jwt.sign({ userId: user._id },'shhhhh' , 
-    {
-    expiresIn: '7h',
-  });
-};
+const JWT = require('jsonwebtoken');
+// const cookieParser = require('cookie-parser');
 
 const register = async (req, res) => {
   try {
@@ -37,13 +30,10 @@ const register = async (req, res) => {
       confirmpassword,
       password,
     }).save();
-    const accessToken = generateAccessToken(user);
-    res.cookie('access_token', accessToken, { httpOnly: true });
     res.status(201).send({
       success: true,
       message: "Registration Successfull",
       user,
-      accessToken, 
     });
   } catch (error) {
     console.log(error);
@@ -75,9 +65,14 @@ const login = async (req, res) => {
       });
     }
     
-    const accessToken = generateAccessToken(user);
-    res.cookie('access_token', accessToken, { httpOnly: true });
+    // const accessToken = generateAccessToken(user);
+    // res.cookie('access_token', accessToken, { httpOnly: true });
     
+    const token = await JWT.sign({_id:user._id} , process.env.JWT_SECRET,{
+      expiresIn:"7h"
+    })
+    user.token = token;
+    console.log(token);
     return res.status(200).send({
       success: true,
       message: "Login Successful",
@@ -85,7 +80,7 @@ const login = async (req, res) => {
         _id: user._id,
         email: user.email,
       },
-      accessToken,
+     token,
     });
   } catch (error) {
     return res.status(500).send({
