@@ -1,12 +1,6 @@
 const userModel = require("../models/userModel.js");
-const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
-const generateAccessToken = (user) => {
-  return jwt.sign({ userId: user._id },'shhhhh' , 
-    {
-    expiresIn: '7d',
-  });
-};
+const JWT = require('jsonwebtoken');
+// const cookieParser = require('cookie-parser');
 
 const register = async (req, res) => {
   try {
@@ -36,13 +30,10 @@ const register = async (req, res) => {
       confirmpassword,
       password,
     }).save();
-    const accessToken = generateAccessToken(user);
-    res.cookie('access_token', accessToken, { httpOnly: true });
     res.status(201).send({
       success: true,
       message: "Registration Successfull",
       user,
-      accessToken, 
     });
   } catch (error) {
     console.log(error);
@@ -53,41 +44,49 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      res.status(200).send({
+      return res.status(400).send({
         success: false,
         message: "Invalid Credentials",
       });
     }
+    
     const user = await userModel.findOne({ email });
     if (!user) {
-      res.status(404).send({
+      return res.status(404).send({
         success: false,
         message: "User does not exist",
       });
     }
-    if (password != user.password) {
-      res.status(200).send({
+    
+    if (password !== user.password) {
+      return res.status(401).send({
         success: false,
         message: "Passwords don't match",
       });
     }
-    const accessToken = generateAccessToken(user);
-    res.cookie('access_token', accessToken, { httpOnly: true });
-    res.status(201).send({
+    
+    // const accessToken = generateAccessToken(user);
+    // res.cookie('access_token', accessToken, { httpOnly: true });
+    
+    const token = await JWT.sign({_id:user._id} , process.env.JWT_SECRET,{
+      expiresIn:"7h"
+    })
+    user.token = token;
+    console.log(token);
+    return res.status(200).send({
       success: true,
-      message: "Login Successfull",
+      message: "Login Successful",
       user: {
         _id: user._id,
         email: user.email,
-        password: user.password,
       },
-      accessToken, 
+     token,
     });
   } catch (error) {
-    res.status(500).send({
+    return res.status(500).send({
       success: false,
-      message: "error in login",
-      error,
+      message: "Error in login",
+      error: error.message,
     });
   }
 };
