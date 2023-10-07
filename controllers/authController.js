@@ -54,41 +54,44 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      res.status(200).send({
+      return res.status(400).send({
         success: false,
         message: "Invalid Credentials",
       });
     }
+    
     const user = await userModel.findOne({ email });
     if (!user) {
-      res.status(404).send({
+      return res.status(404).send({
         success: false,
         message: "User does not exist",
       });
     }
-    if (password != user.password) {
-      res.status(200).send({
+    
+    if (password !== user.password) {
+      return res.status(401).send({
         success: false,
         message: "Passwords don't match",
       });
     }
+    
     const accessToken = generateAccessToken(user);
     res.cookie('access_token', accessToken, { httpOnly: true });
-    res.status(201).send({
+    
+    return res.status(200).send({
       success: true,
-      message: "Login Successfull",
+      message: "Login Successful",
       user: {
         _id: user._id,
         email: user.email,
-        password: user.password,
       },
-      accessToken, 
+      accessToken,
     });
   } catch (error) {
-    res.status(500).send({
+    return res.status(500).send({
       success: false,
-      message: "error in login",
-      error,
+      message: "Error in login",
+      error: error.message,
     });
   }
 };
