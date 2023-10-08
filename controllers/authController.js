@@ -1,5 +1,6 @@
 const userModel = require("../models/userModel.js");
-const JWT = require('jsonwebtoken');
+const JWT = require("jsonwebtoken");
+const axios = require("axios");
 // const cookieParser = require('cookie-parser');
 
 const register = async (req, res) => {
@@ -49,7 +50,7 @@ const login = async (req, res) => {
         message: "Invalid Credentials",
       });
     }
-    
+
     const user = await userModel.findOne({ email });
     if (!user) {
       return res.status(404).send({
@@ -57,20 +58,20 @@ const login = async (req, res) => {
         message: "User does not exist",
       });
     }
-    
+
     if (password !== user.password) {
       return res.status(401).send({
         success: false,
         message: "Passwords don't match",
       });
     }
-    
+
     // const accessToken = generateAccessToken(user);
     // res.cookie('access_token', accessToken, { httpOnly: true });
-    
-    const token = await JWT.sign({_id:user._id} , process.env.JWT_SECRET,{
-      expiresIn:"7h"
-    })
+
+    const token = await JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7h",
+    });
     user.token = token;
     console.log(token);
     return res.status(200).send({
@@ -80,7 +81,7 @@ const login = async (req, res) => {
         _id: user._id,
         email: user.email,
       },
-     token,
+      token,
     });
   } catch (error) {
     return res.status(500).send({
@@ -93,11 +94,11 @@ const login = async (req, res) => {
 
 const resetpassword = async (req, res) => {
   try {
-    const { email, password} = req.body;
+    const { email, password } = req.body;
     if (!email || !password) {
       res.status(400).send({ message: "Enter credentials" });
     }
-    const user = await userModel.findOne({email})
+    const user = await userModel.findOne({ email });
     if (!user) {
       return res.status(404).send({
         success: false,
@@ -119,4 +120,34 @@ const resetpassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login,resetpassword };
+const checkSpam = async (email) => {
+  try {
+    // Escape the email content and wrap it in a valid JSON format
+    const emailContent = JSON.stringify({
+      api_key: "VdEktNCRivfU5T9U05VLYl79TApGjl4jtXs3a2LK",
+      content: email,
+    });
+
+    const response = await axios.post(
+      "https://api.oopspam.com/v1/spamdetection",
+      emailContent, // Use the escaped JSON string as the request body
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-KEY": "VdEktNCRivfU5T9U05VLYl79TApGjl4jtXs3a2LK",
+        },
+      }
+    );
+
+    const data2 = response.data;
+    console.log(data2);
+    return res.json(data2);
+  } catch (error) {
+    console.error("Error making API request:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while making the API request." });
+  }
+};
+
+module.exports = { register, login, resetpassword,checkSpam };
