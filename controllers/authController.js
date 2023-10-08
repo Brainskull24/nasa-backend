@@ -120,34 +120,5 @@ const resetpassword = async (req, res) => {
   }
 };
 
-const checkSpam = async (email) => {
-  try {
-    // Escape the email content and wrap it in a valid JSON format
-    const emailContent = JSON.stringify({
-      api_key: "VdEktNCRivfU5T9U05VLYl79TApGjl4jtXs3a2LK",
-      content: email,
-    });
 
-    const response = await axios.post(
-      "https://api.oopspam.com/v1/spamdetection",
-      emailContent, // Use the escaped JSON string as the request body
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-KEY": "VdEktNCRivfU5T9U05VLYl79TApGjl4jtXs3a2LK",
-        },
-      }
-    );
-
-    const data2 = response.data;
-    console.log(data2);
-    return res.json(data2);
-  } catch (error) {
-    console.error("Error making API request:", error);
-    return res
-      .status(500)
-      .json({ error: "An error occurred while making the API request." });
-  }
-};
-
-module.exports = { register, login, resetpassword,checkSpam };
+module.exports = { register, login, resetpassword };
